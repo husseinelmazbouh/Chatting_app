@@ -11,13 +11,30 @@ class AuthController {
         $this->userService = new UserService($connection);
     }
 
+    private function getRequestData() {
+        if (!empty($_POST)) {
+            return $_POST;
+        }
+
+        $raw = file_get_contents('php://input');
+        $json = json_decode($raw, true);
+        if (is_array($json) && !empty($json)) {
+            return $json;
+        }
+
+        return $_REQUEST;
+    }
+
     public function register() {
-        $name = $_POST['full_name'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $pass = $_POST['password'] ?? '';
+        $data = $this->getRequestData(); 
+
+        $name = $data['full_name'] ?? '';
+        $email = $data['email'] ?? '';
+        $pass = $data['password'] ?? '';
 
         if (empty($name) || empty($email) || empty($pass)) {
-            echo ResponseService::response(400, "All fields required");
+
+            echo ResponseService::response(400, "All fields required. POST Data: " . json_encode($_POST));
             return;
         }
 
@@ -30,8 +47,15 @@ class AuthController {
     }
 
     public function login() {
-        $email = $_POST['email'] ?? '';
-        $pass = $_POST['password'] ?? '';
+        $data = $this->getRequestData();
+
+        $email = $data['email'] ?? '';
+        $pass = $data['password'] ?? '';
+
+        if (empty($email) || empty($pass)) {
+            echo ResponseService::response(400, "Email and Password required");
+            return;
+        }
 
         $user = $this->userService->login($email, $pass);
         if ($user) {
@@ -49,7 +73,8 @@ class AuthController {
     }
 
     public function logout() {
-        $userId = (int)($_POST['user_id'] ?? 0);
+        $data = $this->getRequestData();
+        $userId = (int)($data['user_id'] ?? 0);
         $this->userService->logout($userId);
         echo ResponseService::response(200, "Logged out");
     }

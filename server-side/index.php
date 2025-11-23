@@ -5,30 +5,21 @@ require_once __DIR__ . '/routes/apis.php';
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
     exit(0);
 }
 
-$request_uri = $_SERVER['REQUEST_URI']; 
-$script_name = $_SERVER['SCRIPT_NAME']; 
-$script_dir = dirname($script_name);
+$path = $_GET['route'] ?? '/';
 
-$path = parse_url($request_uri, PHP_URL_PATH);
-
-if (strpos($path, $script_dir) === 0) {
-    $path = substr($path, strlen($script_dir));
+if (substr($path, 0, 1) !== '/') {
+    $path = '/' . $path;
 }
 
-if (strpos($path, '/index.php') === 0) {
-    $path = substr($path, 10);
-}
-
-$path = '/' . ltrim($path, '/');
-$path = rtrim($path, '/');
-
-if (empty($path) || $path === '/') {
-    echo ResponseService::response(200, "API is running!");
+if ($path === '/' || empty($path)) {
+    echo ResponseService::response(200, "API is running. Usage: index.php?route=/your-endpoint");
     exit;
 }
 
@@ -64,7 +55,7 @@ if (isset($apis[$path])) {
 } else {
     echo ResponseService::response(404, [
         "message" => "Route Not Found",
-        "requested_path" => $path
+        "requested_route" => $path
     ]);
 }
 ?>

@@ -12,9 +12,18 @@ class ChatController {
         $this->chatService = new ChatService($connection);
     }
 
+    private function getRequestData() {
+        if (!empty($_POST)) return $_POST;
+        $json = json_decode(file_get_contents('php://input'), true);
+        if (is_array($json)) return $json;
+        return $_REQUEST;
+    }
+
     public function openChat() {
         $userId = authenticateParams(); 
-        $targetId = (int)$_POST['target_user_id'];
+        $data = $this->getRequestData();
+
+        $targetId = (int)($data['target_user_id'] ?? 0);
         
         $id = $this->chatService->getPrivateConversation($userId, $targetId);
         echo ResponseService::response(200, ["conversation_id" => $id]);
@@ -22,8 +31,10 @@ class ChatController {
 
     public function sendMessage() {
         $userId = authenticateParams();
-        $convId = (int)$_POST['conversation_id'];
-        $msg = trim($_POST['message']);
+        $data = $this->getRequestData();
+
+        $convId = (int)($data['conversation_id'] ?? 0);
+        $msg = trim($data['message'] ?? '');
 
         if(empty($msg)) {
             echo ResponseService::response(400, "Empty message");
@@ -53,7 +64,9 @@ class ChatController {
 
     public function markRead() {
         $userId = authenticateParams();
-        $convId = (int)$_POST['conversation_id'];
+        $data = $this->getRequestData();
+
+        $convId = (int)($data['conversation_id'] ?? 0);
         
         $this->chatService->markAsRead($convId, $userId);
         echo ResponseService::response(200, "Marked as read");
