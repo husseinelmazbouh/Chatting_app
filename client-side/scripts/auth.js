@@ -1,7 +1,7 @@
-const API_URL = 'http://localhost/Chatting_app/server-side/index.php';
+const BASE_URL = 'http://localhost/Chatting_app/server-side/index.php';
 
 if (localStorage.getItem('chat_user')) {
-    window.location.href = 'chat.html';
+    window.location.href = '../pages/chat.html';
 }
 
 function handleLogin() {
@@ -10,8 +10,7 @@ function handleLogin() {
     const errorDiv = document.getElementById('error-msg');
 
     if (!email || !password) {
-        errorDiv.innerText = "Please fill all fields";
-        errorDiv.classList.remove('hide');
+        showError("Please fill all fields");
         return;
     }
 
@@ -19,19 +18,18 @@ function handleLogin() {
     params.append('email', email);
     params.append('password', password);
 
-    axios.post(API_URL + '/login', params)
+    axios.post(BASE_URL + '?route=/login', params)
         .then(res => {
             if (res.data.status === 'success') {
                 localStorage.setItem('chat_user', JSON.stringify(res.data.data));
-                window.location.href = 'chat.html';
+                window.location.href = '../pages/chat.html';
             } else {
-                errorDiv.innerText = res.data.message;
-                errorDiv.classList.remove('hide');
+                showError(res.data.message);
             }
         })
         .catch(err => {
-            errorDiv.innerText = "Connection Error";
-            errorDiv.classList.remove('hide');
+            console.error(err);
+            showError("Connection Error or Invalid Credentials");
         });
 }
 
@@ -39,11 +37,9 @@ function handleRegister() {
     const name = document.getElementById('full_name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('error-msg');
 
     if (!name || !email || !password) {
-        errorDiv.innerText = "Please fill all fields";
-        errorDiv.classList.remove('hide');
+        showError("Please fill all fields");
         return;
     }
 
@@ -52,18 +48,20 @@ function handleRegister() {
     params.append('email', email);
     params.append('password', password);
 
-    axios.post(API_URL + '/register', params)
+    axios.post(BASE_URL + '?route=/register', params)
         .then(res => {
             if (res.data.status === 'success') {
                 alert('Registration successful! Please login.');
-                window.location.href = 'login.html';
+                window.location.href = '../pages/login.html';
             } else {
-                errorDiv.innerText = res.data.message;
-                errorDiv.classList.remove('hide');
+                showError(res.data.message);
             }
         })
-        .catch(err => {
-            errorDiv.innerText = "Connection Error";
-            errorDiv.classList.remove('hide');
-        });
+        .catch(err => showError("Connection Error"));
+}
+
+function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.innerText = msg;
+    el.classList.remove('hide');
 }
