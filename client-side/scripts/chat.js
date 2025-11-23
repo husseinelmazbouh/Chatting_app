@@ -10,15 +10,19 @@ let currentChatId = null;
 let currentTargetId = null;
 let pollInterval = null;
 
-document.getElementById('user-display').innerText = `Welcome, ${currentUser.full_name}`;
-loadUsers();
 
-pollInterval = setInterval(() => {
-    if (currentChatId) loadMessages(true);
+document.getElementById('user-display').innerText = "Welcome, " + currentUser.full_name;
+loadContacts();
+
+// Poll for new messages every 3 seconds
+pollInterval = setInterval(function() {
+    if (currentChatId) {
+        loadMessages(true);
+    }
 }, 3000);
 
-function loadUsers() {
-    axios.get(`${API_URL}/users?user_id=${currentUser.user_id}`)
+function loadContacts() {
+    axios.get(API_URL + "?route=/users&user_id=" + currentUser.user_id)
         .then(res => {
             const list = document.getElementById('users-list');
             list.innerHTML = '';
@@ -26,73 +30,76 @@ function loadUsers() {
                 const div = document.createElement('div');
                 div.className = 'user-row';
                 div.innerText = u.full_name;
-                div.onclick = () => openChat(u.id, u.full_name);
-                if (currentTargetId === u.id) div.classList.add('active');
+                
+                div.onclick = function() {
+                    startChat(u.id, u.full_name);
+                };
+                
+                if (currentTargetId === u.id) {
+                    div.classList.add('active');
+                }
+                
                 list.appendChild(div);
             });
         });
 }
 
-function openChat(targetId, name) {
+function startChat(targetId, name) {
     currentTargetId = targetId;
     document.getElementById('chat-with-name').innerText = name;
     
-    // Toggle CSS classes instead of style.display
     document.getElementById('chat-header').classList.remove('hide');
     document.getElementById('input-area').classList.remove('hide');
-    document.getElementById('ai-result').classList.add('hide');
     document.getElementById('placeholder-text').classList.add('hide');
-    
-    loadUsers(); 
+    document.getElementById('ai-result').classList.add('hide');
+
+    loadContacts(); 
 
     const params = new URLSearchParams();
     params.append('user_id', currentUser.user_id);
     params.append('target_user_id', targetId);
 
-    axios.post(`${API_URL}/chat/start`, params)
+    axios.post(API_URL + "?route=/chat/start", params)
         .then(res => {
             currentChatId = res.data.conversation_id;
             loadMessages(false);
-            
-            const readParams = new URLSearchParams();
-            readParams.append('user_id', currentUser.user_id);
-            readParams.append('conversation_id', currentChatId);
-            axios.post(`${API_URL}/chat/read`, readParams);
+            markAsRead();
         });
 }
 
 function loadMessages(isPolling) {
     if (!currentChatId) return;
 
-    axios.get(`${API_URL}/chat/history?user_id=${currentUser.user_id}&conversation_id=${currentChatId}`)
+    axios.get(API_URL + "?route=/chat/history&user_id=" + currentUser.user_id + "&conversation_id=" + currentChatId)
         .then(res => {
             const area = document.getElementById('messages-area');
-            if (!isPolling) area.innerHTML = ''; 
-            
-            const oldScroll = area.scrollTop;
-            const isNearBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 100;
+            const isAtBottom = area.scrollHeight - area.scrollTop - area.clientHeight < 100;
 
+            if (!isPolling) area.innerHTML = ''; 
             if (isPolling) area.innerHTML = ''; 
 
             res.data.data.forEach(msg => {
                 const div = document.createElement('div');
-                div.className = `message-bubble ${msg.is_mine ? 'mine' : 'theirs'}`;
+                div.classList.add('message-bubble');
+                if (msg.is_mine) {
+                    div.classList.add('mine');
+                } else {
+                    div.classList.add('theirs');
+                }
                 
                 let ticks = '';
                 if (msg.is_mine) {
-                    if (msg.status_text === 'read') ticks = '<span class="tick-span tick-read">!!</span>';
-                    else if (msg.status_text === 'delivered') ticks = '<span class="tick-span tick-delivered">!!</span>';
-                    else ticks = '<span class="tick-span tick-sent">!</span>';
+                    if (msg.status_text === 'read') ticks = '<span class="tick-span tick-read">✓✓</span>';
+                    else if (msg.status_text === 'delivered') ticks = '<span class="tick-span tick-delivered">✓✓</span>';
+                    else ticks = '<span class="tick-span tick-sent">✓</span>';
                 }
 
-                div.innerHTML = `${msg.message} ${ticks}`;
+                div.innerHTML = msg.message + " " + ticks;
                 area.appendChild(div);
             });
 
-            if (!isPolling || isNearBottom) {
+            if (!isPolling || isAtBottom) {
                 area.scrollTop = area.scrollHeight;
-            } else if (isPolling) {
-                area.scrollTop = oldScroll;
             }
         });
 }
@@ -107,28 +114,38 @@ function sendMessage() {
     params.append('conversation_id', currentChatId);
     params.append('message', text);
 
-    axios.post(`${API_URL}/chat/send`, params)
-        .then(res => {
+    axios.post(API_URL + "?route=/chat/send", params)
+        .then(() => {
             input.value = '';
             loadMessages(false);
         });
 }
 
+function markAsRead() {
+    if(!currentChatId) return;
+    const params = new URLSearchParams();
+    params.append('user_id', currentUser.user_id);
+    params.append('conversation_id', currentChatId);
+    axios.post(API_URL + "?route=/chat/read", params);
+}
+
 function getSummary() {
     const box = document.getElementById('ai-result');
     box.classList.remove('hide');
-    box.innerText = 'Loading AI summary...';
+    box.innerText = 'Analyzing conversation...';
 
     const params = new URLSearchParams();
     params.append('user_id', currentUser.user_id);
     params.append('conversation_id', currentChatId);
 
-    axios.post(`${API_URL}/ai/summary`, params)
+    axios.post(API_URL + "?route=/ai/summary", params)
         .then(res => {
             if (res.data.summary) {
                 box.innerText = res.data.summary;
             } else if (res.data.error) {
                 box.innerText = res.data.error;
+            } else {
+                box.innerText = "No response from AI.";
             }
         });
 }
@@ -136,7 +153,7 @@ function getSummary() {
 function logout() {
     const params = new URLSearchParams();
     params.append('user_id', currentUser.user_id);
-    axios.post(`${API_URL}/logout`, params).then(() => {
+    axios.post(API_URL + "?route=/logout", params).then(() => {
         localStorage.removeItem('chat_user');
         window.location.href = 'login.html';
     });
