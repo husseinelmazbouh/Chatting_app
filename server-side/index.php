@@ -34,22 +34,37 @@ if (empty($path) || $path === '/') {
 
 if (isset($apis[$path])) {
     $route = $apis[$path];
+
+    if (!isset($route['controller']) || !isset($route['method'])) {
+        echo ResponseService::response(500, "Invalid Route Config");
+        exit;
+    }
+
     $controller_name = $route['controller'];
     $method = $route['method'];
+    
     $controller_file = __DIR__ . "/controllers/{$controller_name}.php";
 
     if (file_exists($controller_file)) {
         require_once $controller_file;
-        $controller = new $controller_name();
-        $controller->$method();
+        
+        if (class_exists($controller_name)) {
+            $controller = new $controller_name();
+            if (method_exists($controller, $method)) {
+                $controller->$method();
+            } else {
+                echo ResponseService::response(500, "Method '$method' not found");
+            }
+        } else {
+            echo ResponseService::response(500, "Class '$controller_name' not found");
+        }
     } else {
         echo ResponseService::response(500, "Controller file missing: $controller_name");
     }
 } else {
     echo ResponseService::response(404, [
         "message" => "Route Not Found",
-        "requested_path" => $path,
-        "base_url_hint" => "Make sure your JS BASE_URL points to index.php"
+        "requested_path" => $path
     ]);
 }
 ?>

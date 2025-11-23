@@ -3,13 +3,15 @@ require_once __DIR__ . "/../connection/connection.php";
 require_once __DIR__ . "/../models/users.php";
 
 class UserService {
-    //Register a new user
-    public function register(string $fullName, string $email, string $password): ?User {
-        global $connection; 
+
+    public function register(string $fullName, string $email, string $password) {
+        global $connection;
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        
         $sql = "INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("sss", $fullName, $email, $hashedPassword);
+        
         if ($stmt->execute()) {
             $id = $this->db->insert_id;
             return new User([
@@ -23,11 +25,11 @@ class UserService {
         }
         return null;
     }
-    //Login Logic
-    public function login(string $email, string $password): ?User {
-        global $connection; 
+
+    public function login(string $email, string $password) {
+        global $connection;
         $user = User::authenticate($this->db, $email, $password);
-         //Update "Online" status and "Last Seen"
+        
         if ($user) {
             $update = "UPDATE users SET is_active = 1 WHERE id = ?";
             $stmt = $this->db->prepare($update);
@@ -38,9 +40,9 @@ class UserService {
         
         return $user;
     }
-    //get all contact
-    public function getAllUsersExcept(int $myId): array {
-        global $connection; 
+
+    public function getAllUsersExcept(int $myId) {
+        global $connection;
         $sql = "SELECT * FROM users WHERE id != ? AND is_active = 1";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $myId);
@@ -54,9 +56,8 @@ class UserService {
         return $users;
     }
     
-    // Logout
     public function logout(int $userId) {
-        global $connection; 
+        global $connection;
         $update = "UPDATE users SET is_active = 0 WHERE id = ?";
         $stmt = $this->db->prepare($update);
         $stmt->bind_param("i", $userId);

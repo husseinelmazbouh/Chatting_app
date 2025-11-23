@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    
+</head>
+<body>
+
+    <div id="header2">
+        <h2 id="user-display">Welcome</h2>
+        <button class="header-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="wide-box chat-layout">
+        
+        <!-- LEFT:USERS LIST -->
+        <div class="sidebar">
+            <h3>Contacts</h3>
+            <div id="users-list" class="flex-scroll">
+                <!-- Users injected here -->
+            </div>
+        </div>
+
+        <!-- RIGHT:CHAT AREA -->
+        <div class="chat-main">
+            
+            <!-- Chat Header -->
+            <div id="chat-header" class="chat-header hide">
+                <h3 id="chat-with-name">Select a User</h3>
+                <button onclick="getSummary()" class="btn-ai">AI Summary</button>
+            </div>
+
+            <!-- AI Summary-->
+            <div id="ai-result" class="ai-box hide"></div>
+
+            <!-- Messages Area -->
+            <div id="messages-area" class="messages-area">
+                <p id="placeholder-text" class="p-holder placeholder-msg">Select a contact to start chatting.</p>
+            </div>
+
+            <!-- Input Area -->
+            <div id="input-area" class="hide">
+                <div class="input-wrapper">
+                    <input type="text" id="msg-input" placeholder="Type a message..." class="input-no-margin">
+                    <button onclick="sendMessage()" class="btn-send">Send</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../scripts/axios.min.js"></script>
+    <script src="../scripts/chat.js"></script>
+</body>
+</html>

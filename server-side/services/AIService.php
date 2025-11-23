@@ -7,7 +7,7 @@ class AIService {
         global $config; 
         $this->apiKey = $config['openai_api_key'] ?? '';
     }
-    public function getSummary(string $messageHistory): string {
+    public function getSummary(string $messageHistory) {
         //Input Check
         if (empty(trim($messageHistory))) {
             return "No messages available to summarize.";
@@ -16,7 +16,7 @@ class AIService {
         return $this->callOpenAI($prompt);
     }
     
-    private function callOpenAI(string $prompt): string {
+    private function callOpenAI(string $prompt) {
         //Config Check
         if (empty($this->apiKey)) {
             return "Error:API Key is missing.";

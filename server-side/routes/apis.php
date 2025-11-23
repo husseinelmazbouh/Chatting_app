@@ -3,7 +3,6 @@ $apis = [
     '/register'      => ['controller' => 'AuthController', 'method' => 'register'],
     '/login'         => ['controller' => 'AuthController', 'method' => 'login'],
     '/logout'        => ['controller' => 'AuthController', 'method' => 'logout'],
-    
     '/users'         => ['controller' => 'AuthController', 'method' => 'getContacts'],
 
     '/chat/start'    => ['controller' => 'ChatController', 'method' => 'openChat'],
