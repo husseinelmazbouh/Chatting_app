@@ -8,30 +8,54 @@ class AuthController {
 
     public function __construct() {
         global $connection;
+        if (!$connection) {
+                echo ResponseService::response(500, "Database connection failed.");
+                die();
+        }
         $this->userService = new UserService($connection);
     }
 
+    private function getRequestData() {
+        $raw = file_get_contents('php://input');
+        $json = json_decode($raw, true);
+        
+        if (is_array($json)) return $json;
+        if (!empty($_POST)) return $_POST;
+        return [];
+    }
+
     public function register() {
-        $name = $_POST['full_name'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $pass = $_POST['password'] ?? '';
+        $data = $this->getRequestData(); 
+
+        $name = $data['full_name'] ?? '';
+        $email = $data['email'] ?? '';
+        $pass = $data['password'] ?? '';
 
         if (empty($name) || empty($email) || empty($pass)) {
-            echo ResponseService::response(400, "All fields required");
-            return;
+            echo ResponseService::response(400, "All fields required.");
+            exit; 
         }
 
         $user = $this->userService->register($name, $email, $pass);
+        
         if ($user) {
             echo ResponseService::response(200, "Registered successfully");
+            exit;
         } else {
             echo ResponseService::response(400, "Email already exists");
+            exit;
         }
     }
 
     public function login() {
-        $email = $_POST['email'] ?? '';
-        $pass = $_POST['password'] ?? '';
+        $data = $this->getRequestData();
+        $email = $data['email'] ?? '';
+        $pass = $data['password'] ?? '';
+
+        if (empty($email) || empty($pass)) {
+            echo ResponseService::response(400, "Email and Password required");
+            exit;
+        }
 
         $user = $this->userService->login($email, $pass);
         if ($user) {
@@ -43,22 +67,25 @@ class AuthController {
                     "email" => $user->getEmail()
                 ]
             ]);
+            exit;
         } else {
             echo ResponseService::response(401, "Invalid credentials");
+            exit;
         }
     }
-
     public function logout() {
-        $userId = (int)($_POST['user_id'] ?? 0);
+        $data = $this->getRequestData();
+        $userId = (int)($data['user_id'] ?? 0);
         $this->userService->logout($userId);
         echo ResponseService::response(200, "Logged out");
+        exit;
     }
 
     public function getContacts() {
         $userId = (int)($_GET['user_id'] ?? 0);
         if ($userId === 0) {
             echo ResponseService::response(401, "Unauthorized");
-            return;
+            exit;
         }
 
         $users = $this->userService->getAllUsersExcept($userId);
@@ -67,6 +94,7 @@ class AuthController {
             $data[] = $u->toArray();
         }
         echo ResponseService::response(200, ["data" => $data]);
+        exit;
     }
 }
 ?>

@@ -1,13 +1,17 @@
 <?php
 require_once __DIR__ . "/../connection/connection.php";
-require_once __DIR__ . "/../models/conversation.php";
+require_once __DIR__ . "/../models/conversations.php"; 
 require_once __DIR__ . "/../models/messages.php";
 require_once __DIR__ . "/../models/participants.php";
 
 class ChatService {
+    private $db;
+
+    public function __construct($connection) {
+        $this->db = $connection;
+    }
 
     public function getPrivateConversation(int $userOneId, int $userTwoId) {
-        global $connection;
         $sql = "SELECT p1.conversation_id 
                 FROM participants p1 
                 JOIN participants p2 ON p1.conversation_id = p2.conversation_id 
@@ -23,7 +27,7 @@ class ChatService {
             return (int)$row['conversation_id'];
         }
 
-        $this->db->query("START TRANSACTION");
+        $this->db->begin_transaction();
         try {
             $this->db->query("INSERT INTO conversations (chat_type) VALUES ('private')");
             $convId = $this->db->insert_id;
@@ -31,20 +35,18 @@ class ChatService {
             $stmt = $this->db->prepare("INSERT INTO participants (conversation_id, user_id) VALUES (?, ?)");
             $stmt->bind_param("ii", $convId, $userOneId);
             $stmt->execute();
-            
             $stmt->bind_param("ii", $convId, $userTwoId);
             $stmt->execute();
 
-            $this->db->query("COMMIT");
+            $this->db->commit();
             return $convId;
         } catch (Exception $e) {
-            $this->db->query("ROLLBACK");
+            $this->db->rollback();
             throw $e;
         }
     }
 
     public function sendMessage(int $senderId, int $conversationId, string $text) {
-        global $connection;
         $sql = "INSERT INTO messages (conversation_id, sender_id, message) VALUES (?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("iis", $conversationId, $senderId, $text);
@@ -65,7 +67,6 @@ class ChatService {
     }
 
     public function getMessages(int $conversationId) {
-        global $connection;
         $sql = "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $conversationId);
@@ -80,7 +81,6 @@ class ChatService {
     }
 
     public function markAsDelivered(int $conversationId, int $userId) {
-        global $connection;
         $sql = "UPDATE messages SET delivered_at = NOW() 
                 WHERE conversation_id = ? AND sender_id != ? AND delivered_at IS NULL";
         $stmt = $this->db->prepare($sql);
@@ -89,7 +89,6 @@ class ChatService {
     }
 
     public function markAsRead(int $conversationId, int $userId) {
-        global $connection;
         $sql = "UPDATE messages SET read_at = NOW() 
                 WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL";
         $stmt = $this->db->prepare($sql);
@@ -98,7 +97,6 @@ class ChatService {
     }
     
     public function getUnreadMessagesText(int $conversationId, int $currentUserId){
-        global $connection;
         $sql = "SELECT message FROM messages 
                 WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL 
                 ORDER BY created_at ASC";
