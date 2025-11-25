@@ -1,34 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Chat App</title>
-    <link rel="stylesheet" href="../styles/style.css">
-</head>
-<body>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Register</title>
+        <link rel="stylesheet" href="../styles/style.css">
+    </head>
 
-    <div id="header2">
-        <h2>Chat App Register</h2>
-    </div>
-
+    <body>
     <div class="box">
         <h3>Create Account</h3>
+
         <div id="error-msg" class="error-msg hide"></div>
-        
+
         <input type="text" id="full_name" placeholder="Full Name">
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
-        
+
         <button onclick="handleRegister()">Register</button>
-        
+
         <p class="text-center">
             Already have an account? 
-            <a href="login.html" class="link">Login</a>
+            <a href="login.html">Login</a>
         </p>
     </div>
 
     <script src="../scripts/axios.min.js"></script>
     <script src="../scripts/auth.js"></script>
-</body>
-</html>
+    </body>
+    </html>

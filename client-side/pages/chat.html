@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="axios.min.js"></script>
+    <title>Chat Dashboard</title>
+    <link rel="stylesheet" href="../styles/style.css">
 </head>
 <body>
-
     <div id="header2">
         <h2 id="user-display">Welcome</h2>
         <button class="header-logout" onclick="logout()">Logout</button>
@@ -16,38 +14,35 @@
 
     <div class="wide-box chat-layout">
         
-        <!-- LEFT: CONTACTS -->
         <div class="sidebar">
             <h3>Contacts</h3>
-            <div id="users-list" class="flex-grow">
-                <!-- Users loaded via JS -->
+            <div id="users-list">
+                <p >Loading contacts...</p>
             </div>
         </div>
 
-        <!-- RIGHT: CHAT -->
         <div class="chat-main">
             
             <div id="chat-header" class="chat-header hide">
-                <h3 id="chat-with-name">User</h3>
+                <h3 id="chat-with-name">Select a User</h3>
                 <button onclick="getSummary()" class="btn-ai">AI Summary</button>
             </div>
 
             <div id="ai-result" class="ai-box hide"></div>
 
             <div id="messages-area" class="messages-area">
-                <p id="placeholder-text" class="p-holder">Select a contact to start chatting.</p>
+                <p id="placeholder-text" class="p-holder">Select a contact from the left to start chatting.</p>
             </div>
 
             <div id="input-area" class="hide">
                 <div class="input-wrapper">
-                    <input type="text" id="msg-input" placeholder="Type a message..." class="input-no-margin">
+                    <input type="text" id="msg-input" placeholder="Type a message..." onkeypress="handleEnter(event)">
                     <button onclick="sendMessage()" class="btn-send">Send</button>
                 </div>
             </div>
         </div>
-
     </div>
-
-    <script src="chat.js"></script>
+    <script src="../scripts/axios.min.js"></script>
+    <script src="../scripts/chat.js"></script>
 </body>
 </html>
