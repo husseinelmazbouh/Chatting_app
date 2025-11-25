@@ -5,7 +5,7 @@ class AIService {
     private string $apiKey;
     public function __construct() {
         global $config; 
-        $this->apiKey = $config['openai_api_key'] ?? '';
+        $this->apiKey = $config['api_key'] ?? '';
     }
     public function getSummary(string $messageHistory) {
         //Input Check

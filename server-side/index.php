@@ -2,43 +2,30 @@
 require_once __DIR__ . '/services/ResponseService.php';
 require_once __DIR__ . '/routes/apis.php';
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json; charset=UTF-8");
-
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     http_response_code(200);
-    exit(0);
+    exit();
 }
 
+// Route Parsing
 $path = $_GET['route'] ?? '/';
-
 if (substr($path, 0, 1) !== '/') {
     $path = '/' . $path;
 }
 
 if ($path === '/' || empty($path)) {
-    echo ResponseService::response(200, "API is running. Usage: index.php?route=/your-endpoint");
+    echo ResponseService::response(200, "Chat API Running.");
     exit;
 }
 
 if (isset($apis[$path])) {
     $route = $apis[$path];
-
-    if (!isset($route['controller']) || !isset($route['method'])) {
-        echo ResponseService::response(500, "Invalid Route Config");
-        exit;
-    }
-
     $controller_name = $route['controller'];
     $method = $route['method'];
-    
     $controller_file = __DIR__ . "/controllers/{$controller_name}.php";
 
     if (file_exists($controller_file)) {
         require_once $controller_file;
-        
         if (class_exists($controller_name)) {
             $controller = new $controller_name();
             if (method_exists($controller, $method)) {
@@ -53,9 +40,6 @@ if (isset($apis[$path])) {
         echo ResponseService::response(500, "Controller file missing: $controller_name");
     }
 } else {
-    echo ResponseService::response(404, [
-        "message" => "Route Not Found",
-        "requested_route" => $path
-    ]);
+    echo ResponseService::response(404, ["message" => "Route Not Found", "route" => $path]);
 }
 ?>
