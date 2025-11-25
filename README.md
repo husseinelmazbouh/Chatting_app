@@ -54,8 +54,8 @@ http://localhost/chatting_app/client-side/pages/login.html
 
 ---
 
-<hr>
-### Made By 
+## Made By 
+
 Hussein El Mazbouh <br>
 Email: husseinelmazbouh1@gmail.com<br>
 Portfolio: https://husseinelmazbouh.github.io/portfolio1/ <br>
